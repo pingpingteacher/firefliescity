@@ -1,0 +1,335 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>微光思辨</title>
+<style>
+:root{
+  --bg:#0a0e17; --bg2:#111827; --gold:#e8c887; --gold-dim:#a8895a;
+  --text:#eef1f6; --muted:#9aa4b8; --line:#2a3242;
+}
+*{box-sizing:border-box; margin:0; padding:0;}
+html,body{height:100%;}
+body{
+  background:radial-gradient(ellipse at 50% 0%,#151d2e 0%,var(--bg) 70%);
+  color:var(--text); font-family:"Noto Serif TC","PingFang TC","Microsoft JhengHei",serif;
+  min-height:100%; padding-top:env(safe-area-inset-top,0px); padding-bottom:env(safe-area-inset-bottom,0px);
+  overflow-x:hidden;
+}
+#app{max-width:640px; margin:0 auto; min-height:100vh; display:flex; flex-direction:column; padding:28px 22px 40px;}
+.progress{font-size:12px; letter-spacing:2px; color:var(--gold-dim); text-align:right; margin-bottom:18px; opacity:.85;}
+.card{animation:fadein .9s ease both;}
+@keyframes fadein{from{opacity:0; transform:translateY(10px);} to{opacity:1; transform:translateY(0);}}
+.kicker{font-size:13px; color:var(--gold-dim); letter-spacing:3px; margin-bottom:6px;}
+h1{font-size:26px; line-height:1.4; margin-bottom:14px; color:var(--gold); font-weight:600;}
+h1.small{font-size:20px;}
+.artist{font-size:14px; color:var(--muted); margin-bottom:18px;}
+p{font-size:16px; line-height:2; color:var(--text); margin-bottom:8px; white-space:pre-line;}
+.big{font-size:22px; line-height:1.9; color:var(--gold); margin:26px 0 10px; font-weight:600; white-space:pre-line;}
+.nodes{display:flex; flex-wrap:wrap; gap:10px; margin:20px 0; justify-content:center;}
+.node{font-size:26px; background:#182236; border:1px solid var(--line); border-radius:50%; width:56px; height:56px; display:flex; align-items:center; justify-content:center; opacity:0; animation:pop .6s ease forwards;}
+@keyframes pop{to{opacity:1; transform:scale(1);}}
+.btn{
+  display:block; width:100%; text-align:left; background:#141c2c; border:1px solid var(--line);
+  color:var(--text); padding:16px 18px; border-radius:12px; margin-top:12px; font-size:16px;
+  cursor:pointer; transition:.2s; font-family:inherit;
+}
+.btn:hover{border-color:var(--gold-dim); background:#1b2740;}
+.btn .sub{display:block; font-size:13px; color:var(--muted); margin-top:5px; font-style:italic;}
+.next-btn{
+  margin-top:32px; background:linear-gradient(90deg,#3a2e1a,#2a2415); color:var(--gold);
+  border:1px solid var(--gold-dim); padding:14px 22px; border-radius:30px; font-size:15px;
+  cursor:pointer; align-self:flex-start; letter-spacing:1px;
+}
+.next-btn.secondary{background:none; color:var(--muted); border:1px solid var(--line); font-size:13px;}
+.chart{display:flex; align-items:flex-end; gap:14px; height:120px; margin:20px 0;}
+.bar{width:44px; background:linear-gradient(180deg,var(--gold),var(--gold-dim)); border-radius:4px 4px 0 0; position:relative; opacity:0; animation:rise 1s ease forwards;}
+.bar span{position:absolute; top:-22px; left:0; right:0; text-align:center; font-size:12px; color:var(--muted);}
+.bar b{position:absolute; bottom:-24px; left:0; right:0; text-align:center; font-size:12px; color:var(--muted); font-weight:normal;}
+@keyframes rise{from{opacity:0;} to{opacity:1;}}
+.deck{display:flex; gap:12px; overflow-x:auto; padding-bottom:10px; margin:18px 0;}
+.deckcard{min-width:230px; background:#141c2c; border:1px solid var(--line); border-radius:12px; padding:16px;}
+.deckcard h3{font-size:15px; color:var(--gold); margin-bottom:6px;}
+.deckcard p{font-size:13px; line-height:1.7;}
+.stage{position:relative; height:150px; margin:20px 0; border-bottom:1px solid var(--line);}
+.stage .spot{position:absolute; bottom:0; left:50%; transform:translateX(-50%); font-size:40px; animation:glow 1.6s ease infinite alternate;}
+@keyframes glow{from{filter:drop-shadow(0 0 4px var(--gold));} to{filter:drop-shadow(0 0 16px var(--gold));}}
+.postcard{border:2px dashed var(--gold-dim); border-radius:8px; padding:20px; margin:20px 0; text-align:center;}
+.postcard .stamp{font-size:34px; margin-top:10px;}
+.footer-note{margin-top:auto; padding-top:30px; font-size:11px; color:#4a5470; text-align:center;}
+.charcard{background:#141c2c; border:1px solid var(--gold-dim); border-radius:14px; padding:24px; text-align:center; margin:20px 0;}
+.charcard .emoji{font-size:52px; margin-bottom:10px;}
+.charcard h2{color:var(--gold); font-size:22px; margin-bottom:12px;}
+</style>
+</head>
+<body>
+<div id="app"></div>
+
+<script>
+const app = document.getElementById('app');
+
+// ---------- character point pool ----------
+const chars = ["螢火蟲","人面蜘蛛","黑冠麻鷺","柴棺龜","斑腿樹蛙","白鼻心","黑眉錦蛇","瑠公圳","農田","土壤館","香水樹","甜心房","磯永吉小屋","考種館","人工氣候室"];
+let scores = {}; chars.forEach(c=>scores[c]=0);
+let picks = {};
+
+function addPts(obj){ for(const k in obj) scores[k]=(scores[k]||0)+obj[k]; }
+
+const charInfo = {
+  "螢火蟲":{e:"✨",d:"你容易被光吸引，也願意成為讓別人開始關心環境的那道光。"},
+  "人面蜘蛛":{e:"🕷",d:"你不急著站上聚光燈，卻默默把很多東西連在一起。"},
+  "黑冠麻鷺":{e:"🐦",d:"你在意那些安靜站著、容易被忽略的日常存在。"},
+  "柴棺龜":{e:"🐢",d:"你關心一旦消失就很難再回來的棲地與生命。"},
+  "斑腿樹蛙":{e:"🐸",d:"你重視水邊的、容易被忽視的小小聲音。"},
+  "白鼻心":{e:"🐾",d:"你留意夜晚才會出現的另一種城市樣貌。"},
+  "黑眉錦蛇":{e:"🐍",d:"你相信被喜歡不該是一種生命值得存在的條件。"},
+  "瑠公圳":{e:"💧",d:"你惦記著曾經流過這片土地、如今幾乎被遺忘的水。"},
+  "農田":{e:"🌾",d:"你重視土地上持續發生的勞動與生活。"},
+  "土壤館":{e:"🟫",d:"你在意看不見卻支撐一切的分解與根基。"},
+  "香水樹":{e:"🌸",d:"你記得的是氣味、季節與身體能感受到的自然。"},
+  "甜心房":{e:"🍰",d:"你相信空間可以隨人與需求不斷改變、共享。"},
+  "磯永吉小屋":{e:"🏠",d:"你想留住能被繼續使用、而不只是被觀看的老建築。"},
+  "考種館":{e:"🔬",d:"你相信持續累積的研究與資料，是理解環境的方式。"},
+  "人工氣候室":{e:"🧪",d:"你傾向先理解，再謹慎介入。"}
+};
+
+// ---------- level data ----------
+const levels = [
+{
+  num:1, title:"共同編織", action:"移除",
+  artist:"郭子萱《當記憶織成一片樹蔭》",
+  exhibit:"一條線，看起來只是一條線。\n但當不同的線與繩結彼此交織，它們開始互相支撐。\n如果其中一條鬆開、斷裂，甚至被剪掉——\n改變的真的只有那一條線嗎？",
+  nodes:["💧","🟫","🌱","🐛","🐸","🐦","👤","💡"],
+  transition:"農場裡，也存在一張看不見的網。水影響土壤，土壤支撐植物，植物養昆蟲，昆蟲又成為蛙、蜘蛛與鳥的食物——而人、道路與燈光，也在這張網裡。",
+  question:"城市的空間有限。如果現在一定要從這張網中移除一個節點——你會先拿掉什麼？",
+  options:[
+    {l:"A",e:"💡",t:"人工照明",s:"夜晚不一定需要像白天一樣明亮。",p:{"螢火蟲":2,"白鼻心":1,"香水樹":1}},
+    {l:"B",e:"🐛",t:"昆蟲",s:"也許少一點小蟲，不會差太多？",p:{"人面蜘蛛":2,"黑冠麻鷺":1,"土壤館":1}},
+    {l:"C",e:"🌱",t:"植物",s:"只留下一些主要植物，也許就夠了。",p:{"農田":2,"香水樹":1,"土壤館":1}},
+    {l:"D",e:"💧",t:"水",s:"如果必須騰出空間，也許水域可以縮小。",p:{"瑠公圳":2,"柴棺龜":1,"斑腿樹蛙":1}},
+    {l:"E",e:"👤",t:"人",s:"如果少一點人的活動，自然是不是會更好？",p:{"農田":2,"磯永吉小屋":1,"甜心房":1}}
+  ],
+  feedback:"你拿掉了一個節點。但消失的，好像不只是一個節點。",
+  big:"少掉一個物種，\n真的只是少掉一個物種嗎？"
+},
+{
+  num:2, title:"檯面之下", action:"保護",
+  artist:"莊智程《另類百大貢獻》",
+  exhibit:"我們習慣記得那些「重要的事情」——偉大的研究、知名人物、被寫進歷史的大事件。\n但有些事情，第一眼只會讓人想問：「原來這也能成為展覽？」\n它像百大貢獻的影子，試著重新問：什麼才算重要？",
+  nodes:["✨","🐸","🕷","🐌","🪱","💧"],
+  transition:"生態裡也有明星。談到農場復育，最容易被看見的也許是螢火蟲——牠會發光、漂亮、容易讓人喜歡。但讓一隻螢火蟲活下來的環境裡，還有很多從來不會站上聚光燈的生命。",
+  question:"農場今年只有一筆環境改善經費。你只能先保護其中一群生命。",
+  options:[
+    {l:"A",e:"✨",t:"螢火蟲",s:"牠能讓更多人開始關心這片環境。",p:{"螢火蟲":2,"香水樹":1}},
+    {l:"B",e:"🪱",t:"分解者與微生物",s:"很少有人來看牠們，但很多生命都依賴牠們。",p:{"土壤館":2,"人面蜘蛛":1}},
+    {l:"C",e:"🐢",t:"原生水域生物",s:"棲地一旦消失，有些生命很難再回來。",p:{"柴棺龜":2,"瑠公圳":1}},
+    {l:"D",e:"🐍",t:"不討喜的生命",s:"被喜歡，不該是一種生命值得存在的條件。",p:{"黑眉錦蛇":2,"人面蜘蛛":1}},
+    {l:"E",e:"🌿",t:"先改善整體棲地",s:"如果環境變好，也許很多生命可以一起留下。",p:{"農田":2,"瑠公圳":1,"土壤館":1}}
+  ],
+  feedback:"聚光燈讓我們看見一個明星。但一個明星的背後，可能站著整個生態系。",
+  big:"我們希望留下螢火蟲，\n是因為牠重要，\n還是因為牠容易被我們喜歡？"
+},
+{
+  num:3, title:"Agony", action:"介入",
+  artist:"鍾家萱《Agony Room》",
+  exhibit:"有些痛苦不會突然發生，壓力可能一點一點累積。外觀看起來還是一樣，內部卻已經開始改變。\n作品留下一個問題：還撐得住，就代表沒有問題嗎？",
+  chart:[["2026",87],["2030",72],["2035",55],["2040",31]],
+  transition:"某個物種仍然存在，沒有歸零、沒有正式消失。但牠的族群正在一年一年減少。",
+  question:"現在，需要介入嗎？",
+  options:[
+    {l:"A",e:"⚡",t:"現在就介入",s:"等到完全消失，也許就太晚了。",p:{"人工氣候室":2,"螢火蟲":1}},
+    {l:"B",e:"🌿",t:"先改善棲地",s:"與其只救一種生命，我想先處理環境。",p:{"農田":2,"瑠公圳":1,"土壤館":1}},
+    {l:"C",e:"🔍",t:"先蒐集更多資料",s:"不知道原因以前，錯誤的介入也可能造成問題。",p:{"斑腿樹蛙":2,"柴棺龜":1}},
+    {l:"D",e:"🍃",t:"盡量減少人為干預",s:"自然的變化，不一定都需要由人控制。",p:{"白鼻心":2,"黑眉錦蛇":1}},
+    {l:"E",e:"🏗",t:"改變空間使用方式",s:"也許人不用離開，但可以換一種相處方法。",p:{"甜心房":2,"人工氣候室":1}}
+  ],
+  feedback:"每一種介入，都有可能改變另一件事情。能夠生存，不代表沒有承受壓力。",
+  big:"活著，和活得很好，\n是同一件事嗎？"
+},
+{
+  num:4, title:"誰替消失留下記憶？", action:"辨認",
+  artist:null,
+  deck:[
+    {n:"劉錫霖",t:"《漂流瓶考古》、《腐化》",d:"人的肉身會腐化，名字會被遺忘。水源校區地面之下，藏著比校史更久遠的痕跡——這是一場記憶的考古。"},
+    {n:"莊智程",t:"《博雅深夜食堂》",d:"宿舍、學餐、選課、社團，是不同世代都能談起的校園記憶。今日習以為常的事，在另一個年代可能完全不同。"},
+    {n:"江秋華",t:"《夜間記憶—臺大夜特敏》",d:"每一次夜間散步，都在校園裡留下足跡。今天你走過的路，過去也曾有人走過。"},
+    {n:"林姵均",t:"《Cycle-Go-Round》",d:"雨天、趕課、找不到車，和某個人一起騎過的路，也可能成為多年後仍記得的校園故事。"}
+  ],
+  exhibit:"大事件會被寫進歷史。但日常，也會成為歷史。",
+  transition:"以前每天流過的水、每晚響起的蛙鳴、每天都存在的農田與生命。也許正因為「每天都在」，所以沒有人想過：有一天，它可能會不在。",
+  question:"如果只能替一種正在消失的記憶留下紀錄，你最想保存什麼？",
+  options:[
+    {l:"A",e:"🏠",t:"老建築與農業研究故事",p:{"磯永吉小屋":2,"考種館":1}},
+    {l:"B",e:"💧",t:"曾經流過這片土地的水",p:{"瑠公圳":2,"柴棺龜":1}},
+    {l:"C",e:"🌾",t:"農田與土地上的生活",p:{"農田":2,"土壤館":1}},
+    {l:"D",e:"🌙",t:"夜晚的氣味、聲音與生命",p:{"香水樹":2,"白鼻心":1,"螢火蟲":1}},
+    {l:"E",e:"🚲",t:"最普通、最容易被忽略的日常",p:{"黑冠麻鷺":2,"甜心房":1}},
+    {l:"F",e:"🔎",t:"已經被埋藏、很難看見的痕跡",p:{"土壤館":2,"人面蜘蛛":1}}
+  ],
+  feedback:"沒有被記錄的東西，也曾經存在。人的故事可以成為口述歷史，建築可以被寫進校史，一頓飯、一趟通勤，也可以成為值得保存的記憶。",
+  big:"一條消失的水圳、一片消失的土地、\n一群消失的生命——\n誰替牠們留下記憶？"
+},
+{
+  num:5, title:"誰站在臺上？", action:"決定",
+  artist:"校慶演唱會策展概念｜何翊綺、陳君睿、沈士紘、麥家儀",
+  exhibit:"臺大像一座已演出近百年的舞台。學生來了又離開，教授、研究者與校友在不同時代留下故事。\n但如果把舞台再放大一些——還有誰其實一直站在上面？",
+  stage:["👩‍🎓","🌳","🕷","✨","🐾"],
+  transition:"我們說到「臺大」，第一個想到的通常是人。但夜晚來臨後，人逐漸離開，蜘蛛開始結網，白鼻心開始移動，蛙開始鳴叫，水仍然繼續流。",
+  question:"今天，你是這座舞台的導演。誰應該站在舞台中央？",
+  options:[
+    {l:"A",e:"👤",t:"人",s:"校園首先是人生活、學習與研究的地方。",p:{"考種館":2,"人工氣候室":1}},
+    {l:"B",e:"🐾",t:"其他生命",s:"牠們無法參與規劃，卻必須承受人做出的決定。",p:{"黑眉錦蛇":2,"柴棺龜":1}},
+    {l:"C",e:"🕸",t:"沒有主角",s:"舞台之所以成立，是因為所有角色共同存在。",p:{"人面蜘蛛":2,"農田":1}},
+    {l:"D",e:"🌗",t:"不同時間，不同主角",s:"白天也許屬於人；夜晚，也許可以讓給其他生命。",p:{"白鼻心":2,"螢火蟲":1}},
+    {l:"E",e:"👀",t:"最容易被忽略的角色",s:"舞台中央應該偶爾讓給每天都在、卻沒人看的生命。",p:{"黑冠麻鷺":2,"香水樹":1}},
+    {l:"F",e:"🔄",t:"舞台不需要固定中心",s:"空間可以隨時間與需求不斷改變。",p:{"甜心房":2,"斑腿樹蛙":1}}
+  ],
+  feedback:"你可以決定誰站在舞台中央。但同一座城市裡，不同生命需要的舞台並不一樣。",
+  big:"如果城市是一座舞台，\n誰決定誰可以站在臺上？"
+},
+{
+  num:6, title:"寫給未來", action:"留下",
+  artist:"梁安哲《Everything Everywhere in the Far Future》",
+  exhibit:"如果不用考慮現實，你覺得臺大的未來會長成什麼樣子？作品沒有要預測正確的未來，它只是邀請我們：想像。",
+  transition:"今天種下的一棵樹、保存的一棟建築、留下的一片農田，一百年後，都會成為別人眼中的「過去」。我們，也正在成為歷史。",
+  question:"如果 2126 年有一位臺大學生站在你今天的位置——你最希望他還能看見什麼？",
+  options:[
+    {l:"A",e:"🌙",t:"真正黑暗的夜晚",p:{"螢火蟲":2,"白鼻心":1}},
+    {l:"B",e:"💧",t:"能讓生命靠近的水",p:{"瑠公圳":2,"柴棺龜":1}},
+    {l:"C",e:"🌾",t:"還能耕作的健康土地",p:{"農田":2,"土壤館":1}},
+    {l:"D",e:"🏠",t:"能繼續被使用的老建築",p:{"磯永吉小屋":2,"甜心房":1,"考種館":1}},
+    {l:"E",e:"🔬",t:"仍然幫助理解環境的科學",p:{"人工氣候室":2,"斑腿樹蛙":1}},
+    {l:"F",e:"🐍",t:"即使不漂亮也能存在的生命",p:{"黑眉錦蛇":2,"人面蜘蛛":1,"黑冠麻鷺":1}},
+    {l:"G",e:"🌿",t:"還能被身體感受到的自然",p:{"香水樹":2,"黑冠麻鷺":1}}
+  ],
+  feedback:"你的選擇，已被放進 2126 年的信封。",
+  big:"但如果真的可以寄一封信給未來——\n你想對那時候的人說什麼？"
+}
+];
+
+let li = -1; // level index, -1 = intro
+let phase = 0; // 0 exhibit/transition, 1 question, 2 feedback
+
+function render(){
+  app.innerHTML = "";
+  if(li === -1) return renderIntro();
+  if(li === levels.length) return renderFinale();
+  if(li === levels.length+1) return renderReveal();
+  const lv = levels[li];
+  const wrap = document.createElement('div'); wrap.className='card';
+  const prog = document.createElement('div'); prog.className='progress';
+  prog.textContent = `0${lv.num} / 06　${lv.title}`;
+  app.appendChild(prog);
+  app.appendChild(wrap);
+
+  if(phase===0){
+    let html = `<div class="kicker">展場</div>`;
+    if(lv.artist) html += `<div class="artist">${lv.artist}</div>`;
+    html += `<p>${lv.exhibit}</p>`;
+    wrap.innerHTML = html;
+    if(lv.nodes){
+      const nd = document.createElement('div'); nd.className='nodes';
+      lv.nodes.forEach((n,i)=>{ const s=document.createElement('div'); s.className='node'; s.textContent=n; s.style.animationDelay=(i*0.12)+'s'; nd.appendChild(s); });
+      wrap.appendChild(nd);
+    }
+    if(lv.chart){
+      const c = document.createElement('div'); c.className='chart';
+      const max = lv.chart[0][1];
+      lv.chart.forEach((d,i)=>{ const b=document.createElement('div'); b.className='bar'; b.style.height=(d[1]/max*90)+'px'; b.style.animationDelay=(i*0.15)+'s'; b.innerHTML=`<span>${d[1]}</span><b>${d[0]}</b>`; c.appendChild(b); });
+      wrap.appendChild(c);
+    }
+    if(lv.stage){
+      const st = document.createElement('div'); st.className='stage';
+      st.innerHTML = `<div class="spot">${lv.stage[0]}</div>`;
+      wrap.appendChild(st);
+    }
+    if(lv.deck){
+      const d = document.createElement('div'); d.className='deck';
+      lv.deck.forEach(c=>{ const dc=document.createElement('div'); dc.className='deckcard'; dc.innerHTML=`<h3>${c.n}｜${c.t}</h3><p>${c.d}</p>`; d.appendChild(dc); });
+      wrap.appendChild(d);
+    }
+    const b = document.createElement('button'); b.className='next-btn'; b.textContent='走進農場 →';
+    b.onclick=()=>{ phase=0.5; renderTransition(lv); };
+    wrap.appendChild(b);
+  }
+}
+
+function renderTransition(lv){
+  app.innerHTML=""; const prog=document.createElement('div'); prog.className='progress'; prog.textContent=`0${lv.num} / 06　${lv.title}`; app.appendChild(prog);
+  const wrap=document.createElement('div'); wrap.className='card';
+  wrap.innerHTML = `<div class="kicker">從作品走進農場</div><p>${lv.transition}</p><div class="big" style="font-size:19px;margin-top:24px;">${lv.question}</div>`;
+  const opts = document.createElement('div');
+  lv.options.forEach(o=>{
+    const btn=document.createElement('button'); btn.className='btn';
+    btn.innerHTML = `${o.e} <b>${o.l}. ${o.t}</b>` + (o.s?`<span class="sub">${o.s}</span>`:'');
+    btn.onclick=()=>choose(lv,o);
+    opts.appendChild(btn);
+  });
+  wrap.appendChild(opts);
+  app.appendChild(wrap);
+}
+
+function choose(lv,o){
+  addPts(o.p); picks['L'+lv.num]=o.l;
+  app.innerHTML=""; const prog=document.createElement('div'); prog.className='progress'; prog.textContent=`0${lv.num} / 06　${lv.title}`; app.appendChild(prog);
+  const wrap=document.createElement('div'); wrap.className='card';
+  wrap.innerHTML = `<div class="kicker">你選擇了：${o.e} ${o.t}</div><p>${lv.feedback}</p><div class="big">${lv.big}</div>`;
+  const b=document.createElement('button'); b.className='next-btn'; b.textContent = lv.num===6 ? '前往終章 →' : '前往下一個展場 →';
+  b.onclick=()=>{ li++; render(); };
+  wrap.appendChild(b);
+  app.appendChild(wrap);
+}
+
+function renderIntro(){
+  const wrap=document.createElement('div'); wrap.className='card';
+  wrap.innerHTML = `
+    <div class="kicker">六關線上互動思辨遊戲</div>
+    <h1>微光思辨</h1>
+    <p>每一次「留下」，都可能伴隨另一種改變。<br>走過六個展場，做出六次選擇——<br>看看今晚，農場會讓你代表誰。</p>`;
+  const b=document.createElement('button'); b.className='next-btn'; b.textContent='開始 →';
+  b.onclick=()=>{ li=0; render(); };
+  wrap.appendChild(b);
+  app.appendChild(wrap);
+}
+
+function renderFinale(){
+  const wrap=document.createElement('div'); wrap.className='card';
+  wrap.innerHTML = `
+    <div class="kicker">六關完成</div>
+    <p>我們一路上，移除了一些東西。保護了一些生命。決定了什麼時候介入。辨認曾經存在的痕跡。決定誰可以站在舞台中央。也選擇了想留給未來的事物。</p>
+    <p style="margin-top:16px;">但是城市的空間有限。每一次「留下」，都可能伴隨另一種改變。</p>
+    <div class="big">如果另一種生命\n也想繼續住在這裡——\n\n我們願意為牠的存在，\n改變多少自己的生活？</div>
+    <div class="postcard"><div class="kicker">✉ 時光郵局</div><p style="font-size:14px;">你可以真的寫一封信，寄給一百年後可能站在同一片土地上的人。</p><div class="stamp">🕰️✉️🕰️</div></div>`;
+  const b=document.createElement('button'); b.className='next-btn'; b.textContent='看看今晚農場讓我代表誰 →';
+  b.onclick=()=>{ li++; render(); };
+  const b2=document.createElement('button'); b2.className='next-btn secondary'; b2.textContent='稍後再寫信，先看代表角色';
+  b2.onclick=b.onclick;
+  wrap.appendChild(b); wrap.appendChild(b2);
+  app.appendChild(wrap);
+}
+
+function renderReveal(){
+  let top=chars[0]; for(const c of chars) if(scores[c]>scores[top]) top=c;
+  const info = charInfo[top];
+  const wrap=document.createElement('div'); wrap.className='card';
+  wrap.innerHTML = `
+    <div class="kicker">你沒有得到唯一答案——生物多樣性本來就不是只有標準答案的題目</div>
+    <div class="charcard">
+      <div class="emoji">${info.e}</div>
+      <h2>${top}</h2>
+      <p style="text-align:center;">今晚，你的選擇與「${top}」特別靠近。</p>
+      <p style="text-align:center;font-size:14px;color:#9aa4b8;">${info.d}</p>
+    </div>
+    <div class="big" style="text-align:center;">你是十五分之一的農場。</div>
+    <p style="margin-top:10px;">還有另外十四個角色，看見了你可能沒有先注意到的東西。</p>`;
+  const b=document.createElement('button'); b.className='next-btn'; b.textContent='去尋找另外十四分之十四 →';
+  b.onclick=()=>{ b.disabled=true; b.textContent='（實體活動說明，敬請期待）'; };
+  wrap.appendChild(b);
+  app.appendChild(wrap);
+}
+
+render();
+</script>
+</body>
+</html>
