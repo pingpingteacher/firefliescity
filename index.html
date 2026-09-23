@@ -37,6 +37,21 @@ h1,h2,h3,p{margin-top:0}h1{font-size:40px;line-height:1.12;margin-bottom:12px}h2
 /* result */
 .roleicon{text-align:center;font-size:68px;margin:15px 0 0}.rolename{text-align:center;font-size:33px;font-weight:900}.roletag{text-align:center;color:var(--glow2);font-weight:800;margin:5px 0 20px}.miniroles{display:flex;flex-wrap:wrap;gap:7px;justify-content:center}.minirole{font-size:12px;padding:7px 9px;border-radius:999px;border:1px solid var(--line);color:var(--muted)}
 .firefly{position:fixed;width:4px;height:4px;border-radius:50%;background:var(--glow);box-shadow:0 0 10px 3px rgba(238,247,169,.4);pointer-events:none;opacity:.55;animation:float 7s infinite ease-in-out;z-index:1}@keyframes float{0%,100%{transform:translate(0,0);opacity:.2}50%{transform:translate(18px,-42px);opacity:.8}}
+
+/* raffle registration */
+.formgrid{display:grid;gap:12px;margin:16px 0}
+.field label{display:block;font-size:13px;color:var(--muted);margin-bottom:6px}
+.field input{width:100%;border:1px solid var(--line);background:#0d2119;color:var(--text);border-radius:14px;padding:14px 15px;font-size:16px;outline:none}
+.field input:focus{border-color:var(--glow2);box-shadow:0 0 0 3px rgba(201,223,115,.08)}
+.consent{display:flex;gap:10px;align-items:flex-start;border:1px solid var(--line);background:#0d1f18;border-radius:14px;padding:13px;margin:12px 0;color:var(--muted);font-size:13px;line-height:1.6}
+.consent input{margin-top:3px;accent-color:#c9df73}
+.routebox{display:grid;gap:8px;margin:14px 0}
+.routeitem{display:grid;grid-template-columns:44px 1fr;gap:9px;align-items:start;border-bottom:1px dashed rgba(169,187,177,.18);padding:9px 0}
+.routeitem b{color:var(--glow2);font-size:12px}
+.routeitem span{font-size:14px;line-height:1.5}
+.notice{font-size:12px;color:var(--muted);line-height:1.65}
+.successmark{text-align:center;font-size:58px;margin:20px 0 10px}
+
 @media(min-width:700px){.app{border-left:1px solid #13271f;border-right:1px solid #13271f}}
 </style>
 </head>
@@ -44,11 +59,13 @@ h1,h2,h3,p{margin-top:0}h1{font-size:40px;line-height:1.12;margin-bottom:12px}h2
 <div class="app" id="app"></div>
 <script>
 const TIME_MAIL_URL=""; // 將正式「時光郵局寄給未來的信」網址貼在引號內
+const SUBMIT_URL="https://script.google.com/macros/s/AKfycbwJrx4Q6sxrlwvnddqA2I3qVvPP4Qv4jRM9kY4ZA3uFvVuWM54zgDtXiMWuxHo652tf/exec"; // Google Apps Script 抽獎資料後台
+const DRAW_COUNT=15;
 const roles={
 "磯永吉小屋":{e:"🏠",tag:"你是記得的人",txt:"你容易注意時間留下的痕跡。對你來說，一棟老房子不只是建築，而是一段仍存在於現在的記憶。你提醒我們：新的事物很重要，但知道自己從哪裡來，也很重要。"},
 "瑠公圳":{e:"💧",tag:"你是尋找隱藏連結的人",txt:"很多重要的事情不一定看得見。水可能藏到地下，歷史可能藏進城市。你會去尋找那些仍然默默連接一切的線。"},
 "農田":{e:"🌾",tag:"你是共生的人",txt:"你不太想把人與自然分成兩邊。農場可以生產、研究、教育，也可以同時成為其他生命的家。你會問：我們怎麼一起生活？"},
-"田心房":{e:"☕",tag:"你是讓事物重新活一次的人",txt:"你接受改變，但改變不一定代表抹掉過去。舊建築可以得到新用途，一個空間也可以重新找到自己的位置。"},
+"甜心房":{e:"☕",tag:"你是讓事物重新活一次的人",txt:"你接受改變，但改變不一定代表抹掉過去。舊建築可以得到新用途，一個空間也可以重新找到自己的位置。"},
 "人工氣候室":{e:"🔬",tag:"你是願意動手改變的人",txt:"當環境出現問題，你傾向問：我們能做什麼？研究、科技、設計與管理，都可能成為回應環境問題的方法。"},
 "考種館":{e:"🌱",tag:"你是替未來準備的人",txt:"一顆種子很小，但裡面可能藏著整片田地的未來。你做決定時，很容易想到：現在的選擇，會替下一個世代留下什麼？"},
 "土壤館":{e:"🟫",tag:"你是看見基礎的人",txt:"你容易注意那些沒有人鼓掌，卻讓整個系統得以存在的東西。土壤、分解者、微生物通常不在聚光燈下，卻支撐許多生命。"},
@@ -62,12 +79,12 @@ const roles={
 "斑腿樹蛙":{e:"🐸",tag:"你是先辨認，再決定的人",txt:"有時最容易犯錯的時刻，就是太快覺得自己已經知道答案。你提醒我們：採取行動以前，先確認自己看見的是什麼。"}
 };
 const scoring={
-q1:{A:{"螢火蟲":2,"白鼻心":1,"香水樹":1},B:{"人面蜘蛛":2,"黑冠麻鷺":1,"土壤館":1},C:{"農田":2,"香水樹":1,"土壤館":1},D:{"瑠公圳":2,"柴棺龜":1,"斑腿樹蛙":1},E:{"農田":2,"磯永吉小屋":1,"田心房":1}},
+q1:{A:{"螢火蟲":2,"白鼻心":1,"香水樹":1},B:{"人面蜘蛛":2,"黑冠麻鷺":1,"土壤館":1},C:{"農田":2,"香水樹":1,"土壤館":1},D:{"瑠公圳":2,"柴棺龜":1,"斑腿樹蛙":1},E:{"農田":2,"磯永吉小屋":1,"甜心房":1}},
 q2:{A:{"螢火蟲":2,"香水樹":1},B:{"土壤館":2,"人面蜘蛛":1},C:{"柴棺龜":2,"瑠公圳":1},D:{"黑眉錦蛇":2,"人面蜘蛛":1},E:{"農田":2,"瑠公圳":1,"土壤館":1}},
-q3:{A:{"人工氣候室":2,"螢火蟲":1},B:{"農田":2,"瑠公圳":1,"土壤館":1},C:{"斑腿樹蛙":2,"柴棺龜":1},D:{"白鼻心":2,"黑眉錦蛇":1},E:{"田心房":2,"人工氣候室":1}},
-q4:{A:{"磯永吉小屋":2,"考種館":1},B:{"瑠公圳":2,"柴棺龜":1},C:{"農田":2,"土壤館":1},D:{"香水樹":2,"白鼻心":1,"螢火蟲":1},E:{"黑冠麻鷺":2,"田心房":1},F:{"土壤館":2,"人面蜘蛛":1}},
-q5:{A:{"考種館":2,"人工氣候室":1},B:{"黑眉錦蛇":2,"柴棺龜":1},C:{"人面蜘蛛":2,"農田":1},D:{"白鼻心":2,"螢火蟲":1},E:{"黑冠麻鷺":2,"香水樹":1},F:{"田心房":2,"斑腿樹蛙":1}},
-q6:{A:{"螢火蟲":2,"白鼻心":1},B:{"瑠公圳":2,"柴棺龜":1},C:{"農田":2,"土壤館":1},D:{"磯永吉小屋":2,"田心房":1,"考種館":1},E:{"人工氣候室":2,"斑腿樹蛙":1},F:{"黑眉錦蛇":2,"人面蜘蛛":1,"黑冠麻鷺":1},G:{"香水樹":2,"黑冠麻鷺":1}}
+q3:{A:{"人工氣候室":2,"螢火蟲":1},B:{"農田":2,"瑠公圳":1,"土壤館":1},C:{"斑腿樹蛙":2,"柴棺龜":1},D:{"白鼻心":2,"黑眉錦蛇":1},E:{"甜心房":2,"人工氣候室":1}},
+q4:{A:{"磯永吉小屋":2,"考種館":1},B:{"瑠公圳":2,"柴棺龜":1},C:{"農田":2,"土壤館":1},D:{"香水樹":2,"白鼻心":1,"螢火蟲":1},E:{"黑冠麻鷺":2,"甜心房":1},F:{"土壤館":2,"人面蜘蛛":1}},
+q5:{A:{"考種館":2,"人工氣候室":1},B:{"黑眉錦蛇":2,"柴棺龜":1},C:{"人面蜘蛛":2,"農田":1},D:{"白鼻心":2,"螢火蟲":1},E:{"黑冠麻鷺":2,"香水樹":1},F:{"甜心房":2,"斑腿樹蛙":1}},
+q6:{A:{"螢火蟲":2,"白鼻心":1},B:{"瑠公圳":2,"柴棺龜":1},C:{"農田":2,"土壤館":1},D:{"磯永吉小屋":2,"甜心房":1,"考種館":1},E:{"人工氣候室":2,"斑腿樹蛙":1},F:{"黑眉錦蛇":2,"人面蜘蛛":1,"黑冠麻鷺":1},G:{"香水樹":2,"黑冠麻鷺":1}}
 };
 const fb={
 q1:{A:["你剪掉了人工照明。","夜色變深，夜行生命得到更多黑暗；人的使用方式也必須重新調整。"],B:["你剪掉了昆蟲。","蜘蛛、蛙與鳥的連線跟著變弱。一個很小的節點，也可能連著很多生命。"],C:["你剪掉了植物。","遮蔭、土壤濕度與昆蟲一起改變，連鎖反應開始擴散。"],D:["你剪掉了水。","水域縮小，依賴水域的生命被擠進更小的棲地。"],E:["你剪掉了人。","自然空間增加，但農作、研究、維護與文化活動也一起變少。"]},
@@ -77,12 +94,26 @@ q4:{A:["你封存了老建築與農業研究。","一棟建築，也可能留下
 q5:{A:["你把舞台中央留給人。","校園承載人的學習與生活；問題是，其他生命需要的空間放在哪裡？"],B:["你把舞台讓給其他生命。","牠們沒有參與規劃，卻一直承受人類做出的空間決定。"],C:["你取消了唯一主角。","沒有固定中心後，空間必須持續協商不同生命的需求。"],D:["你讓舞台隨時間輪替。","同一個地方，白天與夜晚可能屬於完全不同的使用者。"],E:["你把聚光燈移向日常。","平凡並不代表不重要，有些生命只是因為太常見而被忽略。"],F:["你讓舞台保持流動。","中心被拿掉，空間可以依時間、需求與環境重新安排。"]},
 q6:{A:["你在明信片貼上『黑暗』郵票。","未來的進步，也許不只是增加更多光，而是知道什麼時候可以不照亮。"],B:["你貼上『水』郵票。","一條水路同時是景觀、歷史，也可能是許多生命的棲地。"],C:["你貼上『農田』郵票。","即使城市高度發展，土地仍能提醒人們食物從哪裡來。"],D:["你貼上『老建築』郵票。","保存不一定意味維持原樣，也可能是讓舊空間得到新的生命。"],E:["你貼上『科學』郵票。","理解環境、辨認問題與檢驗介入效果，仍是照顧環境的一部分。"],F:["你貼上『共存』郵票。","真正多樣的城市，也必須容納讓人不舒服、害怕或容易忽略的生命。"],G:["你貼上『感官自然』郵票。","一座校園不只有建築，也有季節、氣味、聲音與身體感受到的自然。"]}
 };
-let s={page:"home",answers:{},history:[],q4found:[],q4mem:0,q3year:0};
+
+const optionLabels={
+q1:{A:"移除人工照明",B:"移除昆蟲",C:"移除植物",D:"移除水",E:"移除人"},
+q2:{A:"保護螢火蟲",B:"保護蚯蚓、微生物與分解者",C:"保護原生水域生物",D:"保護蜘蛛、蛇等不討喜的生命",E:"先改善整體棲地"},
+q3:{A:"現在就介入",B:"先改善棲地",C:"先蒐集更多資料",D:"盡量減少人為干預",E:"改變人使用空間的方式"},
+q4:{A:"保存老建築與農業研究",B:"保存曾經流過的水",C:"保存農田與土地生活",D:"保存夜晚的氣味、聲音與生命",E:"保存最普通的日常",F:"保存被埋藏、很難看見的痕跡"},
+q5:{A:"人站在舞台中央",B:"其他生命站在舞台中央",C:"沒有唯一主角",D:"不同時間有不同主角",E:"讓被忽略的角色站上中央",F:"舞台不需要固定中心"},
+q6:{A:"留下真正黑暗的夜晚",B:"留下水圳、池塘與水域",C:"留下農田與健康土地",D:"留下老建築與可再使用空間",E:"留下科學理解環境的能力",F:"留下不討喜也能存在的生命",G:"留下植物、氣味、季節與感官自然"}
+};
+function newParticipantId(){
+  try{return crypto.randomUUID()}catch(e){return "p_"+Date.now()+"_"+Math.random().toString(36).slice(2,9)}
+}
+
+let s={page:"home",answers:{},history:[],q4found:[],q4mem:0,q3year:0,pid:newParticipantId(),raffleSubmitted:false};
 try{const x=localStorage.getItem("firefliescity_game_v2");if(x){const y=JSON.parse(x);if(y&&y.page)s=y}}catch(e){}
+if(!s.pid)s.pid=newParticipantId();
 function save(){try{localStorage.setItem("firefliescity_game_v2",JSON.stringify(s))}catch(e){}}
 function nav(p){s.history.push(s.page);s.page=p;save();render()}
 function back(){if(s.history.length){s.page=s.history.pop();save();render()}}
-function reset(){s={page:"home",answers:{},history:[],q4found:[],q4mem:0,q3year:0};save();render()}
+function reset(){s={page:"home",answers:{},history:[],q4found:[],q4mem:0,q3year:0,pid:newParticipantId(),raffleSubmitted:false};save();render()}
 function buzz(){try{if(navigator.vibrate)navigator.vibrate(24)}catch(e){}}
 function choose(q,a,next){s.answers[q]=a;buzz();s.history.push(s.page);s.page=next;save();render()}
 function pageTop(title,n){return `<div class="top"><button class="back" onclick="back()">← 上一步</button><div class="mid">${title}</div><div class="num">${n?String(n).padStart(2,"0")+" / 06":""}</div></div>${n?`<div class="bar"><i style="width:${n/6*100}%"></i></div>`:""}`}
@@ -111,6 +142,64 @@ function q6Game(){const stamps=[['A','🌙','黑暗'],['B','💧','水'],['C','�
 function stampFuture(a,el,emoji){document.querySelectorAll('.stampchoice').forEach(x=>x.classList.remove('on'));el.classList.add('on');s.answers.q6=a;save();buzz();const box=document.getElementById('stampbox');box.classList.add('filled');box.textContent=emoji;const b=document.getElementById('q6next');b.disabled=false;b.onclick=sendCard}
 function sendCard(){document.getElementById('postcard').classList.add('fly');buzz();setTimeout(()=>nav('q6fb'),900)}
 function openMail(){if(TIME_MAIL_URL)window.open(TIME_MAIL_URL,'_blank');else alert('目前尚未填入「時光郵局寄給未來的信」正式網址。')}
+
+function routeItems(){
+  return ["q1","q2","q3","q4","q5","q6"].map((q,i)=>{
+    const code=s.answers[q]||"";
+    return {q,step:i+1,code,label:(optionLabels[q]&&optionLabels[q][code])||"未作答"};
+  });
+}
+function routeCode(){return routeItems().map(x=>x.code||"-").join("-")}
+function routeText(){return routeItems().map(x=>`${x.q.toUpperCase()} ${x.label}`).join(" → ")}
+function routeHTML(){
+  return routeItems().map(x=>`<div class="routeitem"><b>Q${x.step}</b><span>${x.label}</span></div>`).join("");
+}
+async function submitRaffle(){
+  const name=(document.getElementById("raffleName")?.value||"").trim();
+  const contact=(document.getElementById("raffleContact")?.value||"").trim();
+  const consent=!!document.getElementById("raffleConsent")?.checked;
+  const honey=(document.getElementById("raffleWebsite")?.value||"").trim();
+  if(!name){alert("請填寫姓名或暱稱。");return}
+  if(!contact){alert("請留下至少一種可聯絡方式。");return}
+  if(!consent){alert("請先勾選同意抽獎與聯絡資訊使用說明。");return}
+  if(honey)return;
+  if(!SUBMIT_URL){
+    alert("目前是預覽模式：尚未連接抽獎資料後台。請先把 Google Apps Script 的 /exec 網址填入 SUBMIT_URL。");
+    return;
+  }
+  const winner=scoreResult();
+  const payload={
+    participant_id:s.pid,
+    submitted_at:new Date().toISOString(),
+    name,
+    contact,
+    result_role:winner,
+    route_code:routeCode(),
+    route_text:routeText(),
+    q1_code:s.answers.q1||"",q1_choice:optionLabels.q1[s.answers.q1]||"",
+    q2_code:s.answers.q2||"",q2_choice:optionLabels.q2[s.answers.q2]||"",
+    q3_code:s.answers.q3||"",q3_choice:optionLabels.q3[s.answers.q3]||"",
+    q4_code:s.answers.q4||"",q4_choice:optionLabels.q4[s.answers.q4]||"",
+    q5_code:s.answers.q5||"",q5_choice:optionLabels.q5[s.answers.q5]||"",
+    q6_code:s.answers.q6||"",q6_choice:optionLabels.q6[s.answers.q6]||"",
+    user_agent:navigator.userAgent
+  };
+  const btn=document.getElementById("raffleSubmit");
+  if(btn){btn.disabled=true;btn.textContent="送出中…"}
+  try{
+    await fetch(SUBMIT_URL,{
+      method:"POST",
+      mode:"no-cors",
+      headers:{"Content-Type":"text/plain;charset=utf-8"},
+      body:JSON.stringify(payload)
+    });
+    s.raffleSubmitted=true;save();nav("raffleDone");
+  }catch(err){
+    if(btn){btn.disabled=false;btn.textContent="送出抽獎登記"}
+    alert("送出失敗，請確認網路連線後再試一次。");
+  }
+}
+
 function render(){let h='';switch(s.page){
 case'home':h=`<section class="screen">${fireflies()}<div class="hero"><div class="eyebrow">臺大百晝之夜 × 夜訪農場</div><div class="glow"></div><h1>微光思辨</h1><h3>十五分之一的農場</h3><p class="muted">六個展場，六次行動。<br>不是答題，而是做出你的選擇。</p><div class="pills"><span class="pill">剪</span><span class="pill">照</span><span class="pill">拖</span><span class="pill">挖</span><span class="pill">導演</span><span class="pill">寄出</span></div></div><div class="cta"><button class="primary" onclick="nav('intro')">開始夜訪 →</button>${Object.keys(s.answers).length?`<button class="secondary" onclick="reset()">重新開始</button>`:''}</div></section>`;break;
 case'intro':h=`<section class="screen">${pageTop('遊戲說明',0)}<div class="hero"><h2>你會經過六個展場</h2><p>每一件作品先提出一個問題，接著把問題帶進臺大農場。</p><div class="card"><p>你會真的動手：剪掉一個節點、移動聚光燈、拖動時間、挖掘痕跡、安排舞台、寄一張明信片。</p></div><div class="quote">沒有正確答案。系統只記錄：今晚，你怎麼看這座農場。</div></div>${cta('進入第一個展場 →','q1ex')}</section>`;break;
@@ -136,7 +225,25 @@ case'mail':h=`<section class="screen">${pageTop('時光郵局',6)}<div class="po
 case'final1':h=`<section class="screen">${pageTop('終極關卡',0)}<div class="hero"><div class="pills"><span class="pill">移除</span><span class="pill">保護</span><span class="pill">介入</span><span class="pill">辨認</span><span class="pill">決定</span><span class="pill">留下</span></div><p>一路上，你做了六次行動。</p><div class="glow"></div><p class="muted">城市的空間有限。每一次「留下」，都可能伴隨另一種改變。</p></div>${cta('繼續 →','final2')}</section>`;break;
 case'final2':h=`<section class="screen">${fireflies()}<div class="hero"><div class="glow"></div><div class="bigq">如果另一種生命<br>也想繼續住在這裡——</div><h2>我們願意為牠的存在，<br>改變多少自己的生活？</h2><p class="muted">這一題沒有選項，也沒有標準答案。</p></div>${cta('看看我的十五分之一 →','resultIntro')}</section>`;break;
 case'resultIntro':h=`<section class="screen"><div class="hero"><p>你沒有得到唯一答案。</p><p class="muted">因為生物多樣性，本來就不是一道只有標準答案的題目。</p><div class="glow"></div><p>但在今晚的六次行動裡，</p><h2>有一種觀看農場的方法，<br>和你走得特別近。</h2></div>${cta('揭曉我的十五分之一 →','result')}</section>`;break;
-case'result':{const w=scoreResult(),r=roles[w];h=`<section class="screen">${pageTop('十五分之一揭曉',0)}<div class="roleicon">${r.e}</div><div class="rolename">${w}</div><div class="roletag">${r.tag}</div><div class="card"><p>${r.txt}</p></div><p style="text-align:center"><strong>今晚，你的選擇與「${w}」特別靠近。</strong></p><h2 style="text-align:center">你是十五分之一的農場。</h2>${cta('去找另外十四分之十四 →','ending')}</section>`}break;
+case'result':{const w=scoreResult(),r=roles[w];h=`<section class="screen">${pageTop('十五分之一揭曉',0)}<div class="roleicon">${r.e}</div><div class="rolename">${w}</div><div class="roletag">${r.tag}</div><div class="card"><p>${r.txt}</p></div><p style="text-align:center"><strong>今晚，你的選擇與「${w}」特別靠近。</strong></p><h2 style="text-align:center">你是十五分之一的農場。</h2><div class="card"><p><strong>想參加抽獎嗎？</strong></p><p class="muted">最後將抽出 ${DRAW_COUNT} 位參與者。除了聯絡資訊，我們也會一起記錄你在六關走過的選擇支線。</p></div>${cta('留下聯絡資訊，參加抽獎 →','raffle')}</section>`}break;
+
+case'raffle':{const w=scoreResult();h=`<section class="screen">${pageTop('抽獎登記',0)}
+<div class="eyebrow">十五分之一的農場｜抽獎</div>
+<h2>留下聯絡資訊</h2>
+<p>活動最後將抽出 <strong>${DRAW_COUNT} 位</strong>參與者。你的六關選擇支線會和抽獎登記一起保存，方便主辦團隊看見每位參與者是如何走到最後的農場代表。</p>
+<div class="card"><h3>你的遊戲路徑</h3><div class="routebox">${routeHTML()}</div><p><strong>結果｜${w}</strong></p><p class="notice">支線代碼：${routeCode()}</p></div>
+<div class="formgrid">
+  <div class="field"><label for="raffleName">姓名或暱稱 *</label><input id="raffleName" autocomplete="name" placeholder="例如：以平"></div>
+  <div class="field"><label for="raffleContact">聯絡方式 *</label><input id="raffleContact" autocomplete="email" placeholder="Email／手機／LINE ID，擇一即可"></div>
+  <div class="field" style="position:absolute;left:-9999px" aria-hidden="true"><label>Website</label><input id="raffleWebsite" tabindex="-1" autocomplete="off"></div>
+</div>
+<label class="consent"><input id="raffleConsent" type="checkbox"><span>我同意主辦單位為本活動抽獎、得獎通知與活動聯絡之目的，記錄上述聯絡資訊，以及本次遊戲六關的選擇支線與最終農場代表。</span></label>
+<p class="notice">聯絡資訊不是完成遊戲的必要條件；不想參加抽獎，也可以直接完成遊戲。正式上線前，主辦單位應補充資料保存期間、管理方式與聯絡窗口。</p>
+<div class="cta"><button id="raffleSubmit" class="primary" onclick="submitRaffle()">送出抽獎登記</button><button class="secondary" onclick="nav('ending')">不參加抽獎，直接完成遊戲</button></div>
+</section>`}break;
+case'raffleDone':h=`<section class="screen">${pageTop('抽獎登記完成',0)}
+<div class="hero"><div class="successmark">✓</div><h2>抽獎登記完成</h2><p>你的聯絡資訊與六關支線已送出。</p><div class="card"><p class="muted">支線代碼</p><h3>${routeCode()}</h3><div class="routebox">${routeHTML()}</div><p><strong>農場代表｜${scoreResult()}</strong></p></div><p class="muted">活動最後將抽出 ${DRAW_COUNT} 位參與者，再依主辦單位公告方式聯絡中獎者。</p></div>${cta('完成遊戲 →','ending')}</section>`;break;
+
 case'ending':h=`<section class="screen"><div class="hero"><h2>一座農場，不可能只有你所代表的這一部分。</h2><p>另外十四個角色，看見了你可能沒有先注意到的東西。</p><div class="miniroles">${Object.entries(roles).map(([k,r])=>`<span class="minirole">${r.e} ${k}</span>`).join('')}</div><div class="quote">農場從來不是十五個答案，而是十五個答案之間，仍然彼此連著的線。</div></div><div class="cta"><button class="primary" onclick="reset()">重新體驗一次</button></div></section>`;break;
 default:s.page='home';save();return render()}
 document.getElementById('app').innerHTML=h;window.scrollTo({top:0,behavior:'instant'})}
