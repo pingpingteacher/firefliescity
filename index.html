@@ -138,7 +138,7 @@ home: () => `
 
 intro:()=>`
 <section class="screen active">
-  ${top("遊戲說明","00 / 06")}
+  ${topBar("遊戲說明","00 / 06")}
   <div class="center-text">
     <h2>你會經過六個展場</h2>
     <p>每一件作品，都會帶你走進一個農場裡的問題。</p>
@@ -155,7 +155,7 @@ q1a:()=>artScreen("01 / 06","第一關｜共同編織","郭子萱","《當記憶
 "如果其中一條線被剪掉，改變的真的只有那一條線嗎？","把這個問題帶進農場 →","q1b","line-art"),
 
 q1b:()=>`
-<section class="screen active">${top("第一關｜共同編織","01 / 06")}
+<section class="screen active">${topBar("第一關｜共同編織","01 / 06")}
   <div class="network">
     ${node("💧 水",20,22)}${node("🟫 土壤",62,18)}${node("🌱 植物",38,44)}${node("🐛 昆蟲",8,60)}
     ${node("🐸 蛙類",70,56)}${node("🐦 鳥類",42,73)}${node("👤 人",4,30)}${node("💡 照明",72,30)}
@@ -180,7 +180,7 @@ q2a:()=>artScreen("02 / 06","第二關｜檯面之下","莊智程","《另類百
 "《另類百大貢獻》想看的，正是歷史的另一面。","看看暗面 →","q2b","spotlight"),
 
 q2b:()=>`
-<section class="screen active">${top("第二關｜檯面之下","02 / 06")}
+<section class="screen active">${topBar("第二關｜檯面之下","02 / 06")}
   <div class="art spotlight"><div style="font-size:56px">✨</div></div>
   <h2>生態裡，也有明星。</h2>
   <p>談到農場生態復育，最容易站進聚光燈的，也許是：<strong>螢火蟲</strong>。</p>
@@ -203,7 +203,7 @@ q3a:()=>artScreen("03 / 06","第三關｜Agony","鍾家萱","《Agony Room》",
 "還撐得住，就代表沒有問題嗎？","把這個問題帶進農場 →","q3b","room"),
 
 q3b:()=>`
-<section class="screen active">${top("第三關｜Agony","03 / 06")}
+<section class="screen active">${topBar("第三關｜Agony","03 / 06")}
   <h2>某個物種仍然存在</h2>
   <div class="stats">
     <div class="stat"><b>87</b><small>2026</small></div>
@@ -229,7 +229,7 @@ q3c:()=>choiceScreen("第三關｜Agony","03 / 06","牠還活著。","現在需�
 q3f:()=>feedbackScreen("第三關｜Agony","03 / 06","每一種介入，都可能改變另一件事情。","沒有一條路徑能預先保證結果。","活著，和活得很好，是同一件事嗎？","你完成了：介入","q4a"),
 
 q4a:()=>`
-<section class="screen active">${top("第四關｜誰替消失留下記憶？","04 / 06")}
+<section class="screen active">${topBar("第四關｜誰替消失留下記憶？","04 / 06")}
   <div class="art archive">舊照片、票根、地圖、夜間足跡、自行車收據</div>
   <h2>生態也有歷史嗎？</h2>
   <p>這一關，先從四種不同的「記憶」開始。</p>
@@ -242,7 +242,7 @@ q4d:()=>memoryCard("江秋華","《夜間記憶－臺大夜特敏》","每一次
 q4e:()=>memoryCard("林姵均","《Cycle-Go-Round》","自行車原本只是拿來趕路。但雨天、找不到車、和某個人一起騎過的路，也能成為青春的一部分。","記憶交換｜自行車 × 故事","q4f"),
 
 q4f:()=>`
-<section class="screen active">${top("第四關｜誰替消失留下記憶？","04 / 06")}
+<section class="screen active">${topBar("第四關｜誰替消失留下記憶？","04 / 06")}
   <h2>大事件會變成歷史。</h2>
   <p>但生活，也會變成歷史。</p>
   <div class="timeline"></div>
@@ -266,7 +266,7 @@ q5a:()=>artScreen("05 / 06","第五關｜誰站在臺上？","校慶演唱會策
 "但如果把這座舞台再放大，還有誰其實一直站在上面？","把舞台放大 →","q5b","stage"),
 
 q5b:()=>`
-<section class="screen active">${top("第五關｜誰站在臺上？","05 / 06")}
+<section class="screen active">${topBar("第五關｜誰站在臺上？","05 / 06")}
   <div class="art stage"><div style="font-size:42px;letter-spacing:10px">👩‍🎓 🌳 🐦 🕷 ✨ 🐾 💧 💡</div></div>
   <h2>人，並不是唯一的角色。</h2>
   <p>白天，我們使用校園。</p>
@@ -290,7 +290,7 @@ q6a:()=>artScreen("06 / 06","第六關｜寫給未來","梁安哲","《Everythin
 "這件作品不急著預測未來。它邀請我們：想像。","前往 2126 →","q6b","future"),
 
 q6b:()=>`
-<section class="screen active">${top("第六關｜寫給未來","06 / 06")}
+<section class="screen active">${topBar("第六關｜寫給未來","06 / 06")}
   <div class="postcard">
     <span class="stamp">2126</span>
     <h3>FROM：2026</h3>
@@ -312,7 +312,7 @@ q6c:()=>choiceScreen("第六關｜寫給未來","06 / 06","如果一百年後，
 ],"q6mail"),
 
 q6mail:()=>`
-<section class="screen active">${top("第六關｜寫給未來","06 / 06")}
+<section class="screen active">${topBar("第六關｜寫給未來","06 / 06")}
   <div class="postcard">
     <span class="stamp">2026 → 2126</span>
     <h2 style="color:#263028">✉ 時光郵局</h2>
@@ -330,7 +330,7 @@ q6mail:()=>`
 </section>`,
 
 final1:()=>`
-<section class="screen active">${top("終極關卡","")}
+<section class="screen active">${topBar("終極關卡","")}
   <div class="hero">
     <div class="fade-list">
       <span>移除</span><span>保護</span><span>介入</span><span>辨認</span><span>決定</span><span>留下</span>
@@ -381,7 +381,7 @@ end:()=>`
 </section>`
 };
 
-function top(title,progress){
+function topBar(title,progress){
   return `<div class="topbar"><button class="back" onclick="back()">← 上一步</button><span>${title}</span><span class="progress">${progress}</span></div>`;
 }
 function cta(label,next){
@@ -391,7 +391,7 @@ function node(label,left,topv){
   return `<div class="node" style="left:${left}%;top:${topv}%">${label}</div>`;
 }
 function artScreen(progress,title,artist,work,body,quote,label,next,cls=""){
-  return `<section class="screen active">${top(title,progress)}
+  return `<section class="screen active">${topBar(title,progress)}
     <div class="art ${cls}">${artist}<br>${work}</div>
     <div class="eyebrow">展場介紹</div>
     <h2>${artist}</h2>
@@ -402,7 +402,7 @@ function artScreen(progress,title,artist,work,body,quote,label,next,cls=""){
   </section>`;
 }
 function memoryCard(artist,work,body,keywords,next){
-  return `<section class="screen active">${top("第四關｜誰替消失留下記憶？","04 / 06")}
+  return `<section class="screen active">${topBar("第四關｜誰替消失留下記憶？","04 / 06")}
     <div class="art archive">${artist}<br>${work}</div>
     <div class="eyebrow">記憶片段</div>
     <h2>${artist}</h2><h3>${work}</h3>
@@ -412,7 +412,7 @@ function memoryCard(artist,work,body,keywords,next){
   </section>`;
 }
 function choiceScreen(title,progress,kicker,question,key,options,next){
-  return `<section class="screen active">${top(title,progress)}
+  return `<section class="screen active">${topBar(title,progress)}
     <p class="muted">${kicker}</p>
     <h2>${question}</h2>
     <div class="choices">
@@ -424,7 +424,7 @@ function choiceScreen(title,progress,kicker,question,key,options,next){
   </section>`;
 }
 function feedbackScreen(title,progress,a,b,q,done,next,extra=""){
-  return `<section class="screen active">${top(title,progress)}
+  return `<section class="screen active">${topBar(title,progress)}
     <div class="feedback">
       <h3>${a}</h3>
       <p>${b}</p>
@@ -450,7 +450,7 @@ function resultScreen(){
   // 若仍完全平手，原型取角色字典中的第一個。
   const winner = tied[0];
   const r = roles[winner];
-  return `<section class="screen active">${top("十五分之一揭曉","")}
+  return `<section class="screen active">${topBar("十五分之一揭曉","")}
     <div class="role">${r.emoji}</div>
     <div class="role-name">${winner}</div>
     <div class="role-tag">${r.tag}</div>
